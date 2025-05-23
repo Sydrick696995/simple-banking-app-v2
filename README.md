@@ -272,3 +272,134 @@ If Redis is not available, the application will automatically fall back to in-me
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+### 🔐 IMPROVEMENTS MADE BY SYDRICK B. PARRA
+
+### 📋 Overview
+
+As part of our security enhancement and audit tracking initiative, we implemented a robust **Admin Action Logging System** designed to record all critical actions performed by privileged users (i.e., admins and managers). This feature complements the existing `Transaction` model by focusing on **who did what**, not just money movement.
+
+All additions are marked in the source code with:
+
+```python
+# (SYD) ADDED ADMIN LOG
+```
+
+---
+
+### 🧱 New Components Introduced
+
+#### ✅ `AdminActionLog` Model
+
+A new SQLAlchemy model added to `models.py`:
+
+```python
+class AdminActionLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    admin_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    action = db.Column(db.String(128), nullable=False)
+    details = db.Column(db.Text, nullable=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+```
+
+Purpose:
+
+* Tracks all privileged administrative actions (not only financial).
+* Maintains accountability and supports audit/compliance requirements.
+* Used only by admins and managers, not exposed to regular users.
+
+---
+
+#### ✅ `log_admin_action()` Utility Function
+
+Added to `routes.py`:
+
+```python
+def log_admin_action(admin_id, action, details):
+    print(f"[DEBUG] Logging admin action: {action}")  # (SYD) ADDED ADMIN LOG
+    log = AdminActionLog(
+        admin_id=admin_id,
+        action=action,
+        details=details,
+        timestamp=datetime.utcnow()
+    )
+    db.session.add(log)
+    db.session.commit()
+```
+
+This function is reusable across routes for all administrative events.
+
+---
+
+### 🔧 Routes Enhanced with Admin Logging
+
+We added logging to the following administrative routes:
+
+| Route                         | Action Logged                    | Example Entry                                      |
+| ----------------------------- | -------------------------------- | -------------------------------------------------- |
+| `/admin/deposit`              | Admin deposits to a user         | "Deposited ₱500 to user: johndoe"                  |
+| `/execute_transfer`           | Transfers performed by admins    | "Transferred ₱500 to janedoe"                      |
+| `/admin/activate_user/<id>`   | User account activation          | "Activated user: johndoe"                          |
+| `/admin/deactivate_user/<id>` | User account deactivation        | "Deactivated user: janedoe"                        |
+| `/admin/edit_user/<id>`       | User information updated         | "Edited user: johndoe. Changes made: email, phone" |
+| `/admin/create_account`       | Admin creates a regular user     | "Created new user account: johndoe"                |
+| `/manager/create_admin`       | Manager creates an admin account | "Created new admin account: admin1"                |
+| `/manager/toggle_admin/<id>`  | Promote/demote admin role        | "Promoted user: staff1" / "Demoted user: admin1"   |
+| `/login` and `/logout`        | Admin or manager login/logout    | "admin1 logged in" / "admin1 logged out"           |
+
+All of the above contain `# (SYD) ADDED ADMIN LOG` comments in the codebase.
+
+---
+
+### 🗅️ Admin Logs Web Interface
+
+#### 📄 `admin_logs.html`
+
+* Added a new HTML template: `templates/admin/admin_logs.html`
+* Table format showing:
+
+  * Timestamp
+  * Admin username
+  * Action name
+  * Details
+
+#### 🔗 Route Added: `/admin/logs`
+
+* Accessible only to users with `is_admin` or `is_manager`
+* Allows admins to monitor recent privileged actions
+
+---
+
+### 💠 Database Integration
+
+* Table auto-created via `db.create_all()` or Flask-Migrate
+* Logs stored in the `admin_action_log` table
+* Query example:
+
+  ```sql
+  SELECT * FROM admin_action_log ORDER BY timestamp DESC;
+  ```
+
+---
+
+### 🔐 Why This Was Added
+
+This system was implemented to:
+
+* Improve transparency and accountability.
+* Support audit requirements for sensitive operations.
+* Detect and investigate unauthorized or risky behavior.
+* Align the project with OWASP best practices (e.g., logging & monitoring).
+
+---
+
+### 📌 Note for Reviewers/Developers
+
+* Every new log entry is handled server-side via Python.
+* Print statements like `[DEBUG] Logging admin action: XYZ` help trace execution in the terminal.
+* All related code is clearly marked with:
+
+  ```python
+  # (SYD) ADDED ADMIN LOG
+  ```
+

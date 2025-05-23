@@ -1,9 +1,10 @@
 from extensions import db, bcrypt
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-import datetime
+from datetime import datetime
 import random
 import string
+
 
 def generate_account_number():
     """Generate a random 10-digit account number"""
@@ -33,9 +34,10 @@ class User(UserMixin, db.Model):
     status = db.Column(db.String(20), default='pending')  # 'active', 'deactivated', or 'pending'
     is_admin = db.Column(db.Boolean, default=False)  # Admin status
     is_manager = db.Column(db.Boolean, default=False)  # Manager status (can manage admins)
-    date_registered = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    date_registered = db.Column(db.DateTime, default=datetime.utcnow)
     transactions_sent = db.relationship('Transaction', foreign_keys='Transaction.sender_id', backref='sender', lazy='dynamic')
     transactions_received = db.relationship('Transaction', foreign_keys='Transaction.receiver_id', backref='receiver', lazy='dynamic')
+
     
     @property
     def full_address(self):
@@ -87,7 +89,7 @@ class User(UserMixin, db.Model):
                 receiver_id=recipient.id,
                 amount=amount,
                 transaction_type='transfer',
-                timestamp=datetime.datetime.utcnow()
+                timestamp=datetime.utcnow() 
             )
             db.session.add(transaction)
             return True
@@ -107,7 +109,7 @@ class User(UserMixin, db.Model):
             receiver_id=self.id,
             amount=amount,
             transaction_type='deposit',
-            timestamp=datetime.datetime.utcnow()
+            timestamp=datetime.utcnow()
         )
         db.session.add(transaction)
         return True
@@ -150,9 +152,19 @@ class Transaction(db.Model):
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     receiver_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     amount = db.Column(db.Float)
-    timestamp = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     transaction_type = db.Column(db.String(20), default='transfer')  # 'transfer', 'deposit', 'user_edit', etc.
     details = db.Column(db.Text, nullable=True)  # For storing additional details (e.g., fields modified)
     
     def __repr__(self):
         return f'<Transaction {self.id} - {self.amount}>' 
+
+# (SYD) Added Feature
+class AdminActionLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    admin_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    action = db.Column(db.String(128), nullable=False)
+    details = db.Column(db.Text, nullable=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    admin = db.relationship('User', backref='admin_logs')

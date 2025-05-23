@@ -1,20 +1,20 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
-from werkzeug.urls import url_parse
+from urllib.parse import urlparse
 from app import app, csrf
 from extensions import db, limiter
 from forms import LoginForm, RegistrationForm, TransferForm, ResetPasswordRequestForm, ResetPasswordForm, DepositForm, UserEditForm, ConfirmTransferForm
-from models import User, Transaction
+from models import User, Transaction, AdminActionLog
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 import os
 from functools import wraps
 import psgc_api
-import datetime
+from datetime import datetime
 
 # Context processor to provide current year to all templates
 @app.context_processor
 def inject_year():
-    return {'current_year': datetime.datetime.now().year}
+    return {'current_year': datetime.now().year}
 
 # Admin required decorator
 def admin_required(f):
@@ -25,6 +25,17 @@ def admin_required(f):
             return redirect(url_for('index'))
         return f(*args, **kwargs)
     return decorated_function
+#(SYD) added Logging Function
+def log_admin_action(admin_id, action, details):
+    print(f"[DEBUG] Logging action: {action} - {details}")
+    log = AdminActionLog(
+        admin_id=admin_id,
+        action=action,
+        details=details,
+        timestamp=datetime.utcnow()
+    )
+    db.session.add(log)
+    db.session.commit()
 
 # Manager required decorator
 def manager_required(f):
@@ -95,14 +106,28 @@ def login():
             return redirect(url_for('login'))
             
         login_user(user)
+        #(SYD) ADDED ADMIN LOG
+        if user.is_admin or user.is_manager:
+            log_admin_action(
+            admin_id=user.id,
+            action="Login",
+            details=f"{user.username} logged in"
+        )
         next_page = request.args.get('next')
-        if not next_page or url_parse(next_page).netloc != '':
+        if not next_page or urlparse(next_page).netloc != '':
             next_page = url_for('index')
         return redirect(next_page)
     return render_template('login.html', title='Sign In', form=form)
 
 @app.route('/logout')
 def logout():
+    #(SYD)ADDED ADMIN LOG
+    if current_user.is_authenticated and (current_user.is_admin or current_user.is_manager):
+        log_admin_action(
+            admin_id=current_user.id,
+            action="Logout",
+            details=f"{current_user.username} logged out"
+        )
     logout_user()
     return redirect(url_for('login'))
 
@@ -209,6 +234,13 @@ def execute_transfer():
             return redirect(url_for('transfer'))
         
         if current_user.transfer_money(recipient, amount):
+            #(SYD) ADDED ADMIN LOG
+            if current_user.is_admin or current_user.is_manager:
+                log_admin_action(
+                admin_id=current_user.id,
+                action="Transfer",
+                details=f"Transferred ₱{amount:.2f} to {recipient.username} (Acct #{recipient.account_number})"
+            )
             db.session.commit()
             flash(f'Successfully transferred ₱{amount:.2f} to {recipient.username}')
             return redirect(url_for('account'))
@@ -274,6 +306,14 @@ def admin_dashboard():
     
     return render_template('admin/dashboard.html', title='Admin Dashboard', users=users)
 
+#(SYD) ADDED ADMIN LOGIN
+@app.route('/admin/logs')
+@login_required
+@admin_required
+def admin_logs():
+    logs = AdminActionLog.query.order_by(AdminActionLog.timestamp.desc()).all()
+    return render_template('admin_logs.html', logs=logs)
+
 @app.route('/admin/activate_user/<int:user_id>')
 @login_required
 @admin_required
@@ -287,6 +327,13 @@ def activate_user(user_id):
         
     user.status = 'active'
     db.session.commit()
+    #(Syd) ADDED ADMIN LOG
+    log_admin_action(
+        admin_id=current_user.id,
+        action="Activate User",
+        details=f"Activated user: {user.username}"
+    )
+
     flash(f'Account {user.username} has been activated.')
     return redirect(url_for('admin_dashboard'))
 
@@ -303,6 +350,13 @@ def deactivate_user(user_id):
         
     user.status = 'deactivated'
     db.session.commit()
+    #(SYD) ADDED ADMIN LOG
+    log_admin_action(
+        admin_id=current_user.id,
+        action="Deactivate User",
+        details=f"Deactivated user: {user.username}"
+    )
+
     flash(f'Account {user.username} has been deactivated.')
     return redirect(url_for('admin_dashboard'))
 
@@ -317,6 +371,12 @@ def create_account():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
+        #(SYD) ADDED ADMIN LOG
+        log_admin_action(
+            admin_id=current_user.id,
+            action="Create User",
+            details=f"Created new user account: {user.username}"
+        )
         flash('User account has been created.')
         return redirect(url_for('admin_dashboard'))
     return render_template('admin/create_account.html', title='Create User Account', form=form)
@@ -349,6 +409,12 @@ def admin_deposit():
         
         # Call deposit method
         if user.deposit(amount, current_user):
+            #(SYD) ADDED ADMIN LOG
+            log_admin_action(
+                admin_id=current_user.id,
+                action="Deposit",
+                details=f"Deposited ₱{amount:.2f} to {user.username} (Acct #{user.account_number})"
+            )
             db.session.commit()
             flash(f'Successfully deposited ₱{amount:.2f} to {user.username}')
             return redirect(url_for('admin_dashboard'))
@@ -562,9 +628,15 @@ def edit_user(user_id):
                 amount=None,                # No money involved
                 transaction_type='user_edit',
                 details="\n".join(changes),
-                timestamp=datetime.datetime.utcnow()
+                timestamp=datetime.utcnow()
             )
             db.session.add(transaction)
+            #(SYD) ADDED ADMIN LOG
+            log_admin_action(
+                admin_id=current_user.id,
+                action="Edit User",
+                details=f"Edited user: {user.username}\nChanges:\n" + "\n".join(changes)
+            )
         
         db.session.commit()
         flash(f'User information for {user.username} has been updated.')
@@ -642,6 +714,12 @@ def create_admin():
         admin.set_password(form.password.data)
         db.session.add(admin)
         db.session.commit()
+        #(SYD) ADDED ADMIN LOG
+        log_admin_action(
+            admin_id=current_user.id,
+            action="Create Admin",
+            details=f"Created new admin account: {admin.username}"
+        )
         flash('Admin account has been created')
         return redirect(url_for('admin_list'))
     return render_template('manager/create_admin.html', title='Create Admin Account', form=form)
@@ -667,12 +745,19 @@ def toggle_admin(user_id):
     if user.is_admin:
         user.status = 'active'  # Set status to active when promoting to admin
         flash(f'User {user.username} has been promoted to admin.')
+        #(SYD) ADDED ADMIN LOG
+        log_admin_action(
+            admin_id=current_user.id,
+            action="Promote to Admin" if user.is_admin else "Demote from Admin",
+            details=f"{'Promoted' if user.is_admin else 'Demoted'} user: {user.username}"
+        )
         db.session.commit()
         return redirect(url_for('user_list'))
     else:
         flash(f'User {user.username} has been demoted from admin.')
         db.session.commit()
         return redirect(url_for('admin_list'))
+    
 
 @app.route('/manager/user_list')
 @login_required
