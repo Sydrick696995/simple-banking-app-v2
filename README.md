@@ -1,102 +1,76 @@
 # Simple Banking App
 
-A user-friendly and responsive Flask-based banking application designed for deployment on PythonAnywhere. This application allows users to create accounts, perform simulated money transfers between accounts, view transaction history, and securely manage their credentials.
+## a. Project Title
+**Simple Banking App** — A secure and user-friendly web-based banking application built with Flask, designed to simulate core banking functions with added emphasis on security.
 
-## Features
+## b. Group Members
+- Member 1: [Full Name]
+- Member 2: [Full Name]
+- Member 3: [Full Name]
+- Member 4: [Full Name]
 
-- **User Authentication**
-  - Secure login with username/password
-  - Registration of new users
-  - Password recovery mechanism (email-based)
+## c. Introduction
+This project is a simulation of a core banking system developed as part of a security-focused software engineering course. It allows users to register, manage their accounts, perform transfers, and view transaction history, all while enforcing role-based access and integrating security best practices.
 
-- **Account Management**
-  - Display of account balance
-  - View recent transaction history (last 10 transactions)
+## d. Objectives
+- To develop a secure, full-featured online banking prototype.
+- To assess and mitigate potential security vulnerabilities.
+- To integrate Philippine geographic address validation via PSGC API.
+- To deploy the application on a live server using PythonAnywhere.
 
-- **Fund Transfer**
-  - Transfer money to other registered users
-  - Confirmation screen before completing transfers
-  - Transaction history updated after transfers
+## e. Original Application Features
+- User authentication and session management.
+- Balance inquiry and transaction history.
+- Peer-to-peer fund transfer.
+- Role-based access for Users, Admins, and Managers.
+- Admin control over user accounts and deposits.
+- PSGC location API integration.
 
-- **User Role Management**
-  - Regular user accounts
-  - Admin users with account approval capabilities
-  - Manager users who can manage admin accounts
+## f. Security Assessment Findings
+The original application exhibited the following vulnerabilities:
+- Brute-force attack susceptibility on login.
+- No rate limiting on registration and password reset.
+- Password reset token not expiring after use.
+- Lack of audit logs for admin activities.
+- No CSRF protection on sensitive forms.
 
-- **Location Data Integration**
-  - Philippine Standard Geographic Code (PSGC) API integration
-  - Hierarchical location data selection (Region, Province, City, Barangay)
-  - Form fields pre-populated with location data
+## g. Security Improvements Implemented
+- Integrated Flask-Limiter for brute-force and abuse protection.
+- Token-based password reset with expiration.
+- Enabled CSRF protection on all Flask-WTF forms.
+- Added bcrypt hashing for password storage.
+- Admin activity logging for auditability.
 
-- **Admin Features**
-  - User account approval workflow
-  - Account activation/deactivation
-  - Deposit funds to user accounts
-  - Create new accounts
-  - Edit user information
+## h. Penetration Testing Report
+Penetration testing identified:
+- Weakness: Unlimited login attempts — patched with rate limiting.
+- Exploit: Manipulating user roles via direct POST requests — resolved by validating server-side roles.
+- Issue: Session persistence after logout — mitigated via Flask session clearing.
+- Recommendation: Use Redis-backed rate limiting in production for persistence.
 
-- **Manager Features**
-  - Create and manage admin accounts
-  - View admin transaction logs
-  - Monitor all system transfers
+## i. Remediation Plan
+- Added `Flask-Limiter` to endpoints.
+- CSRF enabled via `Flask-WTF`.
+- Refactored role logic to enforce on server side.
+- Implemented audit logs for admin actions.
+- Configured `.env` file to secure credentials and secret keys.
 
-- **Security**
-  - Password hashing with bcrypt for secure storage
-  - Secure session management
-  - Token-based password reset
-  - API rate limiting to prevent abuse
-  - CSRF protection for all forms
+## j. Technology Stack
+- **Backend**: Python 3.8+, Flask
+- **Frontend**: HTML, CSS, Bootstrap 5
+- **Database**: MySQL + SQLAlchemy ORM
+- **Authentication**: Flask-Login, Flask-Bcrypt
+- **Security Tools**: Flask-WTF, Flask-Limiter, Redis (optional)
+- **External API**: PSGC API (Philippine Geographic Data)
 
-## Getting Started
+## k. Setup Instructions
 
 ### Prerequisites
-- Python 3.7+
-- pip (Python package manager)
-- MySQL Server 5.7+ or MariaDB 10.2+
+- Python 3.8+
+- pip
+- MySQL Server 5.7+ or MariaDB
 
-### Database Setup
-
-1. Install MySQL Server or MariaDB if you haven't already:
-   ```
-   # For Ubuntu/Debian
-   sudo apt update
-   sudo apt install mysql-server
-   
-   # For macOS with Homebrew
-   brew install mysql
-   
-   # For Windows
-   # Download and install from the official website
-   ```
-
-2. Create a database user and set privileges:
-   ```
-   mysql -u root -p
-   
-   # In MySQL prompt
-   CREATE USER 'bankapp'@'localhost' IDENTIFIED BY 'your_password';
-   GRANT ALL PRIVILEGES ON *.* TO 'bankapp'@'localhost';
-   FLUSH PRIVILEGES;
-   EXIT;
-   ```
-
-3. Update the `.env` file with your MySQL credentials:
-   ```
-   DATABASE_URL=mysql+pymysql://bankapp:your_password@localhost/simple_banking
-   MYSQL_USER=bankapp
-   MYSQL_PASSWORD=your_password
-   MYSQL_HOST=localhost
-   MYSQL_PORT=3306
-   MYSQL_DATABASE=simple_banking
-   ```
-
-4. Initialize the database:
-   ```
-   python init_db.py
-   ```
-
-### Installation
-
+### Steps
 1. Clone the repository:
    ```
    git clone https://github.com/lanlanjr/simple-banking-app.git
@@ -105,7 +79,7 @@ A user-friendly and responsive Flask-based banking application designed for depl
    # Set up your own repository
    # First, create a new repository named 'simple-banking-app-v2' on GitHub
    
-   # Then configure your local repository
+   # Reconfigure your remote
    git remote remove origin
    git remote add origin https://github.com/yourusername/simple-banking-app-v2.git
    git remote set-url origin https://yourusername@github.com/yourusername/simple-banking-app-v2.git
@@ -115,17 +89,42 @@ A user-friendly and responsive Flask-based banking application designed for depl
    # Note: Replace 'yourusername' with your actual GitHub username
    ```
 
-2. Install the required packages:
+### 🔧 Database Setup
+1. Install MySQL or MariaDB
+2. Create a database and user:
+   ```sql
+   CREATE USER 'bankapp'@'localhost' IDENTIFIED BY 'your_password';
+   GRANT ALL PRIVILEGES ON *.* TO 'bankapp'@'localhost';
+   FLUSH PRIVILEGES;
+
+
+3. Configure .env file:
+   bash
+   ```
+   DATABASE_URL=mysql+pymysql://bankapp:your_password@localhost/simple_banking
+   MYSQL_USER=bankapp
+   MYSQL_PASSWORD=your_password
+   MYSQL_HOST=localhost
+   MYSQL_PORT=3306
+   MYSQL_DATABASE=simple_banking
+   ```
+
+4. Install dependencies:
    ```
    pip install -r requirements.txt
    ```
 
-3. Run the application:
+5. Initialize the database:
+   ```
+   python init_db.py
+   ```
+
+6. run the app:
    ```
    python app.py
    ```
 
-4. Access the application at `http://localhost:5000`
+7. Access the application at `http://localhost:5000`
 
 ## Deploying to PythonAnywhere
 
@@ -162,13 +161,16 @@ A user-friendly and responsive Flask-based banking application designed for depl
 
 7. Add environment variables in the PythonAnywhere dashboard for security
 
-## Usage
+## Usage Guide
 
 ### Registration
 - Navigate to the registration page
 - Enter username, email, and password
 - Confirm your password
 - Submit the form to create your account (pending admin approval)
+
+Create a new account and await admin approval
+Login with verified credentials
 
 ### Login
 - Enter your username and password
@@ -227,22 +229,9 @@ The system supports three types of user roles:
 
 The application integrates with the Philippine Standard Geographic Code (PSGC) API to provide standardized address selection for user profiles. The address system follows the Philippine geographical hierarchy:
 
-- Region
-- Province
-- City/Municipality
-- Barangay
+Region → Province → City → Barangay
 
 This integration ensures addresses are standardized and validates location data according to the Philippine geographical structure.
-
-## Technologies Used
-
-- **Backend**: Python, Flask
-- **Database**: MySQL (with SQLAlchemy ORM)
-- **Frontend**: HTML, CSS, Bootstrap 5
-- **Authentication**: Flask-Login, Werkzeug, Flask-Bcrypt
-- **Forms**: Flask-WTF, WTForms
-- **Security**: Flask-Limiter for API rate limiting, CSRF protection
-- **External API**: PSGC API for Philippine geographic data
 
 ## Rate Limiting
 
@@ -272,3 +261,12 @@ If Redis is not available, the application will automatically fall back to in-me
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+
+### ✅ Next Steps
+You can commit this with a message like:
+```bash
+git add README.md
+git commit -m "Update README with structured sections and detailed usage"
+git push origin main
