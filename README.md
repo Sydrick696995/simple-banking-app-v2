@@ -1,6 +1,10 @@
-# Simple Banking App
+## Simple Banking App v-2
 
-A user-friendly and responsive Flask-based banking application designed for deployment on PythonAnywhere. This application allows users to create accounts, perform simulated money transfers between accounts, view transaction history, and securely manage their credentials.
+A user-friendly and responsive Flask-based banking application designed for deployment on PythonAnywhere. This application allows users to create accounts, perform simulated money transfers between accounts, view transaction history, and securely manage their credentials. Created by Group 5 members:
+Sydrick Parra
+Julie Mae Bermudo
+Marcial Rempillo
+Vladimir Ivan Pili
 
 ## Features
 
@@ -275,6 +279,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ### 🔐 IMPROVEMENTS MADE BY SYDRICK B. PARRA
 
+
 ### 📋 Overview
 
 As part of our security enhancement and audit tracking initiative, we implemented a robust **Admin Action Logging System** designed to record all critical actions performed by privileged users (i.e., admins and managers). This feature complements the existing `Transaction` model by focusing on **who did what**, not just money movement.
@@ -284,6 +289,24 @@ All additions are marked in the source code with:
 ```python
 # (SYD) ADDED ADMIN LOG
 ```
+
+---
+
+### ⚡️ Why This Was Added
+
+Modern web applications — especially those handling sensitive financial data — face several critical security risks:
+
+* **Privilege Abuse**: Admin users may accidentally or intentionally make unauthorized changes without oversight.
+* **Lack of Traceability**: Without proper logging, it is difficult to trace who made what change and when.
+* **Insecure Audit Practices**: Applications often focus on transaction records but overlook administrative actions, which can have equal or greater impact.
+
+To mitigate these vulnerabilities, we implemented a secure, centralized audit system:
+
+* Ensures **transparency** for all administrative operations.
+* Supports **accountability** through a non-repudiable log.
+* Aligns with **OWASP best practices**, including "Logging & Monitoring" and "Security Misconfiguration" prevention.
+
+By monitoring all privileged user activity, this system dramatically reduces the risk of silent privilege misuse and ensures that all critical changes are recorded.
 
 ---
 
@@ -382,17 +405,6 @@ All of the above contain `# (SYD) ADDED ADMIN LOG` comments in the codebase.
 
 ---
 
-### 🔐 Why This Was Added
-
-This system was implemented to:
-
-* Improve transparency and accountability.
-* Support audit requirements for sensitive operations.
-* Detect and investigate unauthorized or risky behavior.
-* Align the project with OWASP best practices (e.g., logging & monitoring).
-
----
-
 ### 📌 Note for Reviewers/Developers
 
 * Every new log entry is handled server-side via Python.
@@ -402,4 +414,3 @@ This system was implemented to:
   ```python
   # (SYD) ADDED ADMIN LOG
   ```
-
