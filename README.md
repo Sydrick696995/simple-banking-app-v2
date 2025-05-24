@@ -6,6 +6,19 @@ Julie Mae Bermudo
 Marcial Rempillo
 Vladimir Ivan Pili
 
+## 🎥 Project Demo Video
+
+Watch the full walkthrough and demo of the Simple Banking App V2 on YouTube:
+
+🔗 [Click to Watch on YouTube](https://youtu.be/wuia-6WqWcM)
+
+This video covers:
+- App features and roles
+- Fund transfers and admin actions
+- Security improvements and logging
+- Live demonstration of core functionality
+
+
 ## Features
 
 - **User Authentication**
