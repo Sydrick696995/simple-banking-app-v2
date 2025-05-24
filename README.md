@@ -414,3 +414,67 @@ All of the above contain `# (SYD) ADDED ADMIN LOG` comments in the codebase.
   ```python
   # (SYD) ADDED ADMIN LOG
   ```
+
+### 🚀 Deployment on PythonAnywhere
+
+The **Simple Banking App V2** is live and hosted on [PythonAnywhere](https://www.pythonanywhere.com), providing secure access to the application via the link below:
+
+🔗 **Live Demo:** [https://mocec58946.pythonanywhere.com/login?next=%2F](https://mocec58946.pythonanywhere.com/login?next=%2F)
+
+---
+
+### 🛠 Deployment Details
+
+- **Hosting Platform:** PythonAnywhere (free tier)
+- **Backend Framework:** Flask (Python 3.11)
+- **Frontend:** HTML, CSS, Bootstrap 5
+- **Database:** MySQL (hosted by PythonAnywhere)
+- **Security Features Implemented:**
+  - CSRF protection (via Flask-WTF)
+  - Role-based access control (Admin, Manager, User)
+  - Admin action logging (deposit, edit, activate/deactivate, etc.)
+  - Session protection and secure headers
+  - HTTPS enforced in production
+
+---
+
+### ⚙️ Deployment Steps Summary
+
+1. **Code Upload:** Pushed via Git to PythonAnywhere working directory.
+2. **Virtual Environment:** Created and all dependencies installed with `pip`.
+3. **Database Setup:** MySQL database created using the PythonAnywhere Databases tab.
+4. **App Configuration:** Updated `config.py` with production database URI.
+5. **WSGI Configuration:** Modified PythonAnywhere WSGI file to point to the Flask app.
+6. **Testing:** Verified all features work including login, fund transfer, and admin log tracking.
+
+---
+
+### 🔐 Test Account Credentials
+
+You can log in using the following test credentials:
+
+- **Username:** `mocec58946`
+- **Email:** `mocec58946@nomrista.com`
+- **Password:** `admin123`
+
+> This account has administrative privileges and can be used to test fund transfers, deposits, user approvals, and other admin/manager functions.
+
+---
+
+### 📊 Viewing Admin Action Logs
+
+To view audit logs for actions performed by admins and managers (e.g., login, logout, deposits, account activations):
+
+1. Go to your [PythonAnywhere dashboard](https://www.pythonanywhere.com/user/mocec58946/consoles).
+2. Click the console named:  
+   **`MySQL: mocec58946$simple_banking`**
+3. In the MySQL shell, run the following commands:
+
+```sql
+USE mocec58946$simple_banking;
+SHOW TABLES;
+SELECT * FROM admin_action_log ORDER BY id DESC;
+
+---
+
+This deployment supports live testing, secure transactions, and showcases the application’s full feature set for evaluation and demonstration.
